@@ -9,7 +9,7 @@ sentence-transformers
 pdfplumber
 pypdfium2
 pandas
-numpy﻿
+numpy
 
 
 
