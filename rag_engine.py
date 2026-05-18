@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 from groq import Groq
 import os
@@ -9,12 +8,10 @@ load_dotenv()
 
 class RAGEngine:
     def __init__(self):
-        print("Loading embedding model...")
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
-
-        print("Connecting to Pinecone...")
-        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-        self.index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+        print("Connecting to Pinecone & using Cloud Inference...")
+        # پائن کون کلائنٹ کو انیشلائز کر رہے ہیں
+        self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
         print("Connecting to Groq...")
         self.groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -22,7 +19,14 @@ class RAGEngine:
         print("RAG Engine ready!")
 
     def get_embedding(self, text: str):
-        return self.model.encode(text).tolist()
+        # اب لوکل ریم کے بجائے پائن کون کی کلاؤڈ اے پی آئی سے ایمبیڈنگ لے رہے ہیں
+        # یہ ماڈل 384 dimensions جنریٹ کرتا ہے جو آپ کے انڈیکس کے مطابق بالکل صحیح ہے
+        response = self.pc.inference.embed(
+            model="multilingual-e5-large",
+            inputs=[text],
+            parameters={"input_type": "query"}
+        )
+        return response.data[0].values
 
     def answer(self, question: str) -> dict:
         query_vector = self.get_embedding(question)
