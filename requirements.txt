@@ -5,7 +5,6 @@ python-multipart
 python-dotenv
 groq
 pinecone
-sentence-transformers
 pdfplumber
 pypdfium2
 pandas
