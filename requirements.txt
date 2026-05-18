@@ -4,7 +4,7 @@ pydantic
 python-multipart
 python-dotenv
 groq
-pinecone-client
+pinecone
 sentence-transformers
 pdfplumber
 pypdfium2
