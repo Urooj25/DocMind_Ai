@@ -5,10 +5,9 @@ from rag_engine import RAGEngine
 import os
 
 app = FastAPI(title="RAG Chatbot API")
-from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # یہ ہر لائیو فرنٹ اینڈ لنک کو اجازت دے دے گا
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
