@@ -5,6 +5,14 @@ from rag_engine import RAGEngine
 import os
 
 app = FastAPI(title="RAG Chatbot API")
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CORSMiddleware,
