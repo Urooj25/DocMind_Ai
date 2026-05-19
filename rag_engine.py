@@ -56,4 +56,17 @@ Question: {question}
 Answer:"""
 
         response = self.groq.chat.completions.create(
-            model="llama
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=500
+        )
+        return {
+            "answer": response.choices[0].message.content.strip(),
+            "sources": list(set(sources))
+        }
+
+    def add_document(self, file_path: str, source_name: str) -> int:
+        from pdf_processor import PDFProcessor
+        processor = PDFProcessor()
+        chunks = processor.process(file_path, source_n
