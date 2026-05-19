@@ -42,8 +42,7 @@ def upload_document(file: UploadFile = File(...)):
     count = rag.add_document(file_path, file.filename)
     return {"message": f"Uploaded and indexed {count} chunks from {file.filename}"}
 
-# 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))  # ✅ 8080
     uvicorn.run(app, host="0.0.0.0", port=port)
