@@ -9,7 +9,7 @@ load_dotenv()
 class RAGEngine:
     def __init__(self):
         print("Connecting to Pinecone & using Cloud Inference...")
-        # پائن کون کلائنٹ کو انیشلائز کر رہے ہیں
+        # 
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
@@ -19,8 +19,8 @@ class RAGEngine:
         print("RAG Engine ready!")
 
     def get_embedding(self, text: str):
-        # اب لوکل ریم کے بجائے پائن کون کی کلاؤڈ اے پی آئی سے ایمبیڈنگ لے رہے ہیں
-        # یہ ماڈل 384 dimensions جنریٹ کرتا ہے جو آپ کے انڈیکس کے مطابق بالکل صحیح ہے
+        
+        #
         response = self.pc.inference.embed(
             model="multilingual-e5-large",
             inputs=[text],
