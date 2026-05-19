@@ -1,4 +1,4 @@
-https://rag-chatbot-kt9jn4h.svc.aped-4627-b74a.pinecone.iofrom fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from rag_engine import RAGEngine
