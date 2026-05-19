@@ -69,4 +69,47 @@ Answer:"""
     def add_document(self, file_path: str, source_name: str) -> int:
         from pdf_processor import PDFProcessor
         processor = PDFProcessor()
-        chunks = processor.process(file_path, source_n
+        chunks = processor.process(file_path, source_name)
+
+        vectors = []
+        for i, chunk in enumerate(chunks):
+            embedding = self.get_embedding(chunk["text"], input_type="passage")
+            vectors.append({
+                "id": f"{source_name}_{i}",
+                "values": embedding,
+                "metadata": {
+                    "text": chunk["text"],
+                    "source": chunk["source"]
+                }
+            })
+
+        batch_size = 100
+        for i in range(0, len(vectors), batch_size):
+            self.index.upsert(vectors=vectors[i:i+batch_size])
+
+        return len(vectors)
+
+    def upload_default_documents(self):
+        import uuid
+        documents = [
+            {"text": "Python is a high-level programming language known for simple syntax. Created by Guido van Rossum in 1991.", "source": "Python Overview"},
+            {"text": "Machine learning is a subset of AI that enables computers to learn from data.", "source": "ML Basics"},
+            {"text": "FastAPI is a modern Python web framework for building APIs with automatic documentation.", "source": "FastAPI Docs"},
+            {"text": "Pinecone is a vector database for AI applications with fast similarity search.", "source": "Pinecone Docs"},
+            {"text": "RAG stands for Retrieval Augmented Generation. It combines document retrieval with language model generation.", "source": "RAG Architecture"},
+            {"text": "Groq is an AI inference platform providing fast access to LLMs including LLaMA 3.", "source": "Groq Platform"},
+            {"text": "Embeddings are numerical vector representations of text used for semantic search.", "source": "Embeddings Guide"},
+        ]
+
+        vectors = []
+        for doc in documents:
+            embedding = self.get_embedding(doc["text"], input_type="passage")
+            vectors.append({
+                "id": str(uuid.uuid4()),
+                "values": embedding,
+                "metadata": doc
+            })
+
+        self.index.upsert(vectors=vectors)
+        print(f"Uploaded {len(vectors)} default documents!")
+        return len(vectors)
