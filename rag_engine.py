@@ -9,7 +9,6 @@ load_dotenv()
 class RAGEngine:
     def __init__(self):
         print("Connecting to Pinecone & using Cloud Inference...")
-        # 
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
@@ -18,108 +17,13 @@ class RAGEngine:
 
         print("RAG Engine ready!")
 
-    def get_embedding(self, text: str):
-        
-        #
+    def get_embedding(self, text: str, input_type: str = "query"):
         response = self.pc.inference.embed(
             model="multilingual-e5-large",
             inputs=[text],
-            parameters={"input_type": "query"}
+            parameters={"input_type": input_type}
         )
         return response.data[0].values
 
     def answer(self, question: str) -> dict:
         query_vector = self.get_embedding(question)
-
-        results = self.index.query(
-            vector=query_vector,
-            top_k=3,
-            include_metadata=True
-        )
-
-        chunks = []
-        sources = []
-        for match in results["matches"]:
-            print(f"Score: {match['score']} | Source: {match['metadata'].get('source')}")
-            if match["score"] > 0.1:
-                chunks.append(match["metadata"].get("text", ""))
-                sources.append(match["metadata"].get("source", "Unknown"))
-
-        if not chunks:
-            return {
-                "answer": "I could not find relevant information to answer your question.",
-                "sources": []
-            }
-
-        context = "\n\n".join(chunks)
-
-        prompt = f"""You are a helpful AI assistant. Answer the question using ONLY the context below.
-If the answer is not in the context, say "I don't have enough information."
-
-Context:
-{context}
-
-Question: {question}
-
-Answer:"""
-
-        response = self.groq.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=500
-        )
-
-        return {
-            "answer": response.choices[0].message.content.strip(),
-            "sources": list(set(sources))
-        }
-
-    def add_document(self, file_path: str, source_name: str) -> int:
-        from pdf_processor import PDFProcessor
-        processor = PDFProcessor()
-        chunks = processor.process(file_path, source_name)
-
-        vectors = []
-        for i, chunk in enumerate(chunks):
-            embedding = self.get_embedding(chunk["text"])
-            vectors.append({
-                "id": f"{source_name}_{i}",
-                "values": embedding,
-                "metadata": {
-                    "text": chunk["text"],
-                    "source": chunk["source"]
-                }
-            })
-
-        batch_size = 100
-        for i in range(0, len(vectors), batch_size):
-            self.index.upsert(vectors=vectors[i:i+batch_size])
-
-        return len(vectors)
-
-    def upload_default_documents(self):
-        import uuid
-
-        documents = [
-            {"text": "Python is a high-level programming language known for simple syntax. Created by Guido van Rossum in 1991. It supports object-oriented, functional, and procedural programming.", "source": "Python Overview"},
-            {"text": "Machine learning is a subset of AI that enables computers to learn from data. Common algorithms include linear regression, decision trees, and neural networks. Supervised learning uses labeled data.", "source": "ML Basics"},
-            {"text": "FastAPI is a modern Python web framework for building APIs. It uses type hints and provides automatic documentation at /docs. It is fast, easy to use, and production-ready.", "source": "FastAPI Docs"},
-            {"text": "Pinecone is a vector database for AI applications. It stores embeddings and allows fast similarity search using cosine similarity. It is serverless and scales automatically.", "source": "Pinecone Docs"},
-            {"text": "RAG stands for Retrieval Augmented Generation. It combines document retrieval with language model generation. The system retrieves relevant documents then uses them as context for the LLM to generate accurate answers.", "source": "RAG Architecture"},
-            {"text": "Groq is an AI inference platform providing fast access to LLMs including LLaMA 3 and Mixtral. It has a simple API and is known for very fast inference speeds. It is free to use with generous limits.", "source": "Groq Platform"},
-            {"text": "Embeddings are numerical vector representations of text. Similar meanings produce similar vectors. The all-MiniLM-L6-v2 model produces 384-dimensional vectors and is fast and accurate for semantic search.", "source": "Embeddings Guide"},
-        ]
-
-        vectors = []
-        for doc in documents:
-            embedding = self.get_embedding(doc["text"])
-            vectors.append({
-                "id": str(uuid.uuid4()),
-                "values": embedding,
-                "metadata": doc
-            })
-
-        self.index.upsert(vectors=vectors)
-        print(f"Uploaded {len(vectors)} default documents!")
-        return len(vectors)
