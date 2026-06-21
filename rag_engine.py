@@ -23,6 +23,22 @@ class RAGEngine:
         )
         return response.data[0].values
 
+    def transcribe_audio(self, audio_bytes: bytes, filename: str = "audio.webm") -> str:
+        """
+        Converts spoken audio into text using Groq's hosted Whisper model.
+        Used by the /ask-voice endpoint as the first step before running
+        the existing RAG answer() pipeline.
+        """
+        transcription = self.groq.audio.transcriptions.create(
+            file=(filename, audio_bytes),
+            model="whisper-large-v3",
+            response_format="text"
+        )
+        # response_format="text" returns a plain string directly.
+        # If using the default response_format, use transcription.text instead.
+        text = transcription if isinstance(transcription, str) else transcription.text
+        return text.strip()
+
     def answer(self, question: str) -> dict:
         query_vector = self.get_embedding(question)
         results = self.index.query(
@@ -113,3 +129,4 @@ Answer:"""
         self.index.upsert(vectors=vectors)
         print(f"Uploaded {len(vectors)} default documents!")
         return len(vectors)
+              
